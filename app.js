@@ -22,15 +22,58 @@ function updateProgress(){
   document.getElementById('totalBadge').textContent = done.length + ' / 1000';
 }
 
-// ── TTS ───────────────────────────────────────
+// ── TTS (안정화) ─────────────────────────────
+const SONG_MAP = {}; SONGS.forEach(s=>SONG_MAP[s[0]]=s);
+let voices = [], curUtter = null, speakTimer = null, watchTimer = null, activeBtn = null;
+
+function loadVoices(){ if('speechSynthesis' in window) voices = speechSynthesis.getVoices(); }
+if('speechSynthesis' in window){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+
+function pickVoice(){
+  if(!voices.length) loadVoices();
+  return voices.find(v=>v.lang==='en-US' && v.localService)
+      || voices.find(v=>v.lang==='en-US')
+      || voices.find(v=>/^en/i.test(v.lang)) || null;
+}
+
+function setPlaying(on){
+  document.body.classList.toggle('playing', on);
+  if(activeBtn) activeBtn.classList.toggle('speak-on', on);
+  if(!on) activeBtn = null;
+}
+
 function speak(text, btn){
   if(!text || !('speechSynthesis' in window)) return;
-  window.speechSynthesis.cancel();
+  const ss = window.speechSynthesis;
+  clearTimeout(speakTimer); clearTimeout(watchTimer);
+  if(activeBtn) activeBtn.classList.remove('speak-on');
+  activeBtn = btn || null;
+  ss.cancel();                         // 이전 재생 정리
+  speakTimer = setTimeout(()=>startSpeak(text, 0), 150);  // cancel 직후 바로 speak하면 먹통 → 지연
+}
+
+function startSpeak(text, retry){
+  const ss = window.speechSynthesis;
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'en-US'; u.rate = 0.82;
-  window.speechSynthesis.speak(u);
-  if(btn){ btn.classList.add('speak-on'); setTimeout(()=>btn.classList.remove('speak-on'), 2000); }
+  const v = pickVoice(); if(v) u.voice = v;
+  let started = false;
+  u.onstart = ()=>{ started = true; setPlaying(true); };
+  u.onend = u.onerror = ()=>{ if(curUtter===u){ curUtter=null; setPlaying(false); } };
+  curUtter = u;                        // 전역 보관 (가비지 수집으로 끊기는 버그 방지)
+  if(ss.paused) ss.resume();
+  ss.speak(u);
+  // 1.5초 안에 시작 안 되면 엔진 초기화 후 1회 재시도
+  watchTimer = setTimeout(()=>{
+    if(!started && curUtter===u){
+      ss.cancel();
+      if(retry < 1) setTimeout(()=>startSpeak(text, retry+1), 200);
+      else { curUtter=null; setPlaying(false); }
+    }
+  }, 1500);
 }
+
+function speakNum(n, btn){ const s = SONG_MAP[n]; if(s) speak(s[4], btn); }
 
 // ── 유틸 ──────────────────────────────────────
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -97,7 +140,7 @@ function renderList(){
       <div class="song-key" id="kp${s[0]}">💡 ${esc(s[7])}</div>
       <div class="song-actions">
         <button class="s-btn" onclick="toggleExpand(${s[0]},this)">📖 번역 보기</button>
-        <button class="s-btn" onclick="speak('${ea(s[4])}',this)">🔊</button>
+        <button class="s-btn" onclick="speakNum(${s[0]},this)">🔊</button>
         <button class="s-btn ${isBm?'star':''}" id="bm${s[0]}" onclick="toggleBm(${s[0]},this)">${isBm?'★':'☆'}</button>
         <button class="s-btn ${isDone?'ok':''}" id="dn${s[0]}" onclick="toggleDone(${s[0]},this)">${isDone?'✅':'○'}</button>
       </div>`;
@@ -200,7 +243,7 @@ function shuffleCards(){
   cardOrder=arr; cardIdx=0; renderCard();
 }
 function resetCards(){ cardOrder=SONGS.map((_,i)=>i); cardIdx=0; renderCard(); }
-function speakCard(){ const s=curSong(); if(s) speak(s[4],null); }
+function speakCard(){ const s=curSong(); if(s) speak(s[4],document.getElementById('cSpeak')); }
 function toggleCardStar(){
   const s=curSong(); if(!s) return;
   const idx=bookmarks.indexOf(s[0]);
@@ -243,7 +286,7 @@ function makeBlank(en){
   if(!cands.length) return {html: esc(en), word:''};
   const pick = cands[Math.floor(Math.random()*cands.length)];
   const blanks = '_'.repeat(pick.w.replace(/[^a-zA-Z]/g,'').length);
-  const slot = `<span class="blank-slot" onclick="revealBlank(this,'${ea(pick.w)}')">${blanks}</span>`;
+  const slot = `<span class="blank-slot" data-w="${ea(pick.w)}" onclick="revealBlank(this)">${blanks}</span>`;
   const parts = [...words];
   parts[pick.i] = slot;
   return {html: parts.map((w,i)=>i===pick.i?w:esc(w)).join(' '), word: pick.w};
@@ -268,7 +311,7 @@ function renderBlank(){
       <div class="blank-en-wrap">${html}</div>
       ${s[7]?`<div class="blank-key">💡 ${esc(s[7])}</div>`:''}
       <div class="blank-actions">
-        <button class="s-btn" onclick="speak('${ea(s[4])}',this)">🔊 듣기</button>
+        <button class="s-btn" onclick="speakNum(${s[0]},this)">🔊 듣기</button>
         <button class="s-btn ${bookmarks.includes(s[0])?'star':''}" onclick="toggleBmBlank(${s[0]},this)">${bookmarks.includes(s[0])?'★':'☆'}</button>
         <button class="s-btn ${done.includes(s[0])?'ok':''}" onclick="toggleDoneBlank(${s[0]},this)">${done.includes(s[0])?'✅':'○'}</button>
         <span class="blank-tip">빈칸 탭 → 정답</span>
@@ -277,8 +320,8 @@ function renderBlank(){
   });
 }
 
-function revealBlank(el, word){
-  el.textContent = word;
+function revealBlank(el){
+  el.textContent = el.dataset.w;
   el.classList.add('revealed');
 }
 function setBlankCat(f, el){
@@ -308,7 +351,7 @@ function renderFav(){
   const c = document.getElementById('favContainer');
   document.getElementById('favInfo').textContent = '즐겨찾기 ' + list.length + '곡';
   if(!list.length){
-    c.innerHTML = `<div class="fav-empty"><div class="fav-empty-icon">☕</div>목록에서 ☆ 눌러 즐겨찾기 추가</div>`;
+    c.innerHTML = `<div class="fav-empty"><div class="fav-empty-icon">💿</div>목록에서 ☆ 눌러 즐겨찾기 추가</div>`;
     return;
   }
   c.innerHTML = '';
@@ -327,7 +370,7 @@ function renderFav(){
       <div class="song-ko show">${esc(s[6])}</div>
       ${s[7]?`<div class="song-key show">💡 ${esc(s[7])}</div>`:''}
       <div class="song-actions">
-        <button class="s-btn" onclick="speak('${ea(s[4])}',this)">🔊 듣기</button>
+        <button class="s-btn" onclick="speakNum(${s[0]},this)">🔊 듣기</button>
         <button class="s-btn star" onclick="removeFav(${s[0]})">★ 제거</button>
         <button class="s-btn ${done.includes(s[0])?'ok':''}" onclick="toggleDone(${s[0]},this)">${done.includes(s[0])?'✅':'○'}</button>
       </div>`;

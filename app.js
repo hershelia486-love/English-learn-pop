@@ -114,12 +114,14 @@ function getFiltered(){
   return list;
 }
 
+let listLimit = 60;
 function renderList(){
   const list = getFiltered();
   document.getElementById('listInfo').textContent = list.length + '곡';
   const c = document.getElementById('listContainer');
   c.innerHTML = '';
-  list.slice(0, 60).forEach((s, vi)=>{   // 60개씩 렌더
+  if(!list.length) c.innerHTML='<p class="empty-results">검색 결과가 없어요. 다른 단어로 찾아보세요.</p>';
+  list.slice(0, listLimit).forEach((s, vi)=>{   // 60개씩 렌더
     const isBm = bookmarks.includes(s[0]);
     const isDone = done.includes(s[0]);
     const div = document.createElement('div');
@@ -146,10 +148,11 @@ function renderList(){
       </div>`;
     c.appendChild(div);
   });
-  if(list.length > 60){
-    const more = document.createElement('div');
-    more.style.cssText = 'text-align:center;padding:16px;color:var(--muted);font-size:12px';
-    more.textContent = `검색으로 좁혀보세요 (${list.length}곡 중 60개 표시)`;
+  if(list.length > listLimit){
+    const more = document.createElement('button');
+    more.className = 'more-btn';
+    more.textContent = `문장 더 보기 (${Math.min(listLimit,list.length)} / ${list.length})`;
+    more.onclick = ()=>{listLimit += 60; renderList();};
     c.appendChild(more);
   }
 }
@@ -184,6 +187,7 @@ function toggleDone(n, btn){
 }
 
 function onSearch(v){
+  listLimit = 60;
   searchQ = v;
   document.getElementById('searchClear').style.display = v ? 'block' : 'none';
   renderList();
@@ -195,6 +199,7 @@ function clearSearch(){
   renderList();
 }
 function setCat(f, el){
+  listLimit = 60;
   catFilter = f;
   document.querySelectorAll('#catRow .cat-chip').forEach(c=>c.classList.remove('on'));
   el.classList.add('on');
@@ -296,6 +301,7 @@ function renderBlank(){
   const list = getBlankList();
   const c = document.getElementById('blankContainer');
   c.innerHTML = '';
+  if(!list.length) c.innerHTML='<p class="empty-results">복습할 문장이 없어요. 목록에서 문장을 추가해 보세요.</p>';
   list.forEach(s=>{
     const {html} = makeBlank(s[4]);
     const div = document.createElement('div');

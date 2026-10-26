@@ -4,20 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>뉴욕물먹은보름달 POP</title>
+<meta name="theme-color" content="#fff9ef">
+<meta name="description" content="팝송 1,000문장으로 즐겁게 배우는 영어. 듣고, 읽고, 카드와 빈칸으로 복습해요.">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="hd">
   <div class="hd-top">
-    <div class="lp" aria-hidden="true"></div>
+    <div class="brand-mark" aria-hidden="true">p<span>o</span>p.</div>
     <div class="hd-titles">
-      <div class="hd-title">뉴욕물먹은보름달 POP</div>
+      <h1 class="hd-title">뉴욕물먹은보름달 <span>POP</span></h1>
       <div class="hd-sub">팝송으로 배우는 영어 1000문장</div>
     </div>
-    <div class="hd-badge" id="totalBadge">0 / 1000</div>
+    <div class="progress-summary"><span>나의 암기 기록</span><div class="hd-badge" id="totalBadge">0 / 1000</div></div>
   </div>
-  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="progress-bar" role="progressbar" aria-label="암기 진도" aria-valuemin="0" aria-valuemax="1000" aria-valuenow="0"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
   <div class="tabs">
     <div class="tab on" onclick="setTab('list')">🎵 목록</div>
     <div class="tab" onclick="setTab('card')">🃏 카드</div>
@@ -26,10 +28,20 @@
   </div>
 </div>
 
+<main id="learningMain">
+<section class="welcome" aria-labelledby="welcomeTitle">
+  <div class="welcome-copy"><span class="eyebrow">LITTLE BY LITTLE, EVERY DAY</span>
+    <h2 id="welcomeTitle">좋아하는 한 문장,<br>영어가 조금 더 가까이.</h2>
+    <p>듣고, 따라 읽고, 기억해요.<br>팝송 1,000문장과 함께하는 나의 작은 영어 시간.</p>
+    <div class="welcome-tags"><span>♪ 듣는 즐거움</span><span>✦ 배우는 기쁨</span></div>
+  </div>
+  <img src="learning-garden.svg" class="garden" alt="책을 읽는 토끼와 꽃, 나무가 있는 작은 배움의 정원" width="340" height="240">
+</section>
+<div class="section-intro"><div><span class="eyebrow">MY ENGLISH TIME</span><h2 id="sectionTitle">오늘의 문장을 만나보세요</h2></div><p id="sectionHint">한 문장씩, 나만의 속도로.</p></div>
 <!-- 목록 뷰 -->
 <div id="viewList">
   <div class="search-wrap">
-    <input class="search-input" id="searchInput" placeholder="🔍 곡명 · 아티스트 · 가사 검색..." oninput="onSearch(this.value)">
+    <input class="search-input" id="searchInput" aria-label="곡명, 아티스트, 가사 검색" placeholder="곡명 · 아티스트 · 가사를 검색해 보세요" oninput="onSearch(this.value)">
     <span class="search-clear" id="searchClear" onclick="clearSearch()">✕</span>
   </div>
   <div class="cat-row" id="catRow">
@@ -107,6 +119,8 @@
   </div>
 </div>
 
+</main>
+<footer>작은 배움이 쌓여, 더 넓은 세상으로. <span>뉴욕물먹은보름달 POP</span></footer>
 <!-- 스크롤 버튼 -->
 <div class="scroll-btns">
   <div class="scroll-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</div>
@@ -115,5 +129,6 @@
 
 <script src="data.js"></script>
 <script src="app.js"></script>
+<script src="accessibility.js"></script>
 </body>
 </html>

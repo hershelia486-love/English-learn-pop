@@ -1,0 +1,27 @@
+{
+  "records": 1111,
+  "required_fields_complete": true,
+  "exact_duplicates": [],
+  "contained_extracts": [],
+  "near_matches": [
+    {
+      "ids": [
+        982,
+        1044
+      ],
+      "score": 0.8571
+    }
+  ],
+  "near_match_decisions": [
+    {
+      "ids": [
+        982,
+        1044
+      ],
+      "reason": "excuse=변명, shift=임시 방편. 문장 틀은 비슷하지만 대상이 다르므로 유지."
+    }
+  ],
+  "sha256": "4b4e7f4c4207fdf5b90e06bcd45079a3a8f06ab277b5940b2f4d7591fd413455",
+  "errors": [],
+  "passed": true
+}

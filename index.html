@@ -5,6 +5,168 @@ body.reel-open{overflow:hidden}.reel-overlay{position:fixed;inset:0;z-index:10;b
 @media(min-width:850px){.grid .card{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);column-gap:42px;align-content:start}.grid .tag{grid-column:1/-1}.grid .english{grid-column:1;grid-row:2/5;margin-bottom:0}.grid .pron{grid-column:2;grid-row:2}.grid .ko{grid-column:2;grid-row:3}.grid .source{grid-column:2;grid-row:4}.grid .buttons{grid-column:1/-1}}
 @media(max-width:650px){nav{padding:12px 16px;display:block}.brand{font-size:16px}.brand small{display:none}.tabs{margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.tab{padding:9px 6px;font-size:14px}.wrap{padding:16px}.hero{padding:22px 0 14px;gap:16px}.hero p{font-size:15px}.hero h1{font-size:30px}.count{min-width:90px;padding-left:15px;font-size:12px}.count strong{font-size:30px}.filters{flex-wrap:wrap;margin-top:20px;gap:8px}.filters input{flex-basis:100%;width:100%}.filters select{width:100%}.card{padding:24px 20px}.english{font-size:25px}.ko{font-size:18px}.notice{font-size:13px}.reel-bar{padding:10px 16px}.reel-categories{padding:0 16px 8px}.reel-category-list{right:16px;width:calc(100% - 32px)}.reel-stage{padding:4px 10px}.reel-stage .card{width:100%;min-height:min(100cqh,440px);aspect-ratio:auto;border-radius:12px;padding:24px;justify-content:safe center}.reel-stage .english{font-size:28px}.reel-stage .ko{font-size:19px}.reel-stage .source{font-size:13px}.reel-foot{font-size:11px}}
 @media(max-height:550px){.reel-stage .card{min-height:0;justify-content:flex-start;aspect-ratio:auto}.reel-stage .english{font-size:25px}.reel-foot{padding:5px}.reel-bar{padding-block:5px}}@media(prefers-reduced-motion:no-preference){.btn,.tab{transition:background-color .15s,color .15s}.reel-stage .card{animation:appear .16s ease-out}@keyframes appear{from{opacity:.75;transform:translateY(6px)}to{opacity:1;transform:none}}}@media(hover:hover){.tab:hover,.reel-chip:hover{background:#dce6d9}.btn:hover{filter:brightness(.94)}}
+.quote-focus{text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:1px;text-underline-offset:.18em;text-decoration-skip-ink:auto}
 </style></head><body><header><nav><div class="brand"><small>SEON · 영어 문장 모음</small>마음에 남는 영어 한 문장</div><div class="tabs"><button class="tab active" data-tab="list" aria-pressed="true">문장 목록</button><button class="tab" data-tab="reel" aria-pressed="false">한 장씩</button><button class="tab" data-tab="fav" aria-pressed="false">즐겨찾기</button></div></nav></header><main class="wrap"><div class="hero"><div><div class="eyebrow">읽고, 듣고, 마음에 담기</div><h1>오늘은 어떤 문장을<br>읽어 볼까요?</h1><p>주제를 고르고, 영어와 한국어 뜻을 함께 읽어 보세요.</p></div><div class="count"><strong id="total">—</strong>개의 문장</div></div><details class="notice"><summary>문장 출처와 한글 읽기 안내</summary><p>1,111문장에 영어·한국어 뜻·한글 읽기를 담았습니다. 옛 속담은 당시의 견해를 담으며, 출처와 번역의 추가 검토가 필요할 수 있습니다. 일부 문장은 앞뒤 맥락을 덜어 낸 발췌입니다. 옛 철자와 등장인물의 말투에는 풀이를 덧붙였습니다. 한글 읽기는 발음 사전을 바탕으로 만든 근사 표기입니다. 영어의 강세와 연음은 음성 듣기로 확인해 주세요.</p></details><div class="filters"><input id="search" placeholder="영어, 한국어, 작가 검색" aria-label="문장 검색"><select id="category" aria-label="주제 선택"><option value="">모든 주제</option></select></div><div id="info" class="meta"></div><section id="list" class="grid"></section><button id="more" class="more">문장 더 보기</button><section id="reel" class="reel-overlay hidden" aria-label="한 장씩 보기"><div class="reel-bar"><button class="reel-close" id="reelClose">✕ 닫기</button><span id="reelCount" aria-live="polite"></span></div><div class="reel-categories"><div class="reel-category-header"><span class="reel-category-label" id="reelCategoryLabel">주제 · 전체</span><button class="reel-category-toggle" id="reelCategoryToggle" aria-expanded="false" aria-controls="reelCategoryList">주제 선택 ▾</button></div><div class="reel-category-list" id="reelCategoryList" hidden aria-label="주제 선택"></div><p class="reel-category-hint" id="reelCategoryHint" hidden>목록을 위아래로 내려 주제를 고르세요.</p></div><div class="reel-stage" id="reelCard"></div><div class="reel-foot">위로 밀면 다음 문장 · 아래로 밀면 이전 문장<br><span id="reelEdge"></span></div></section><footer>1,111문장 · 중복·표기 검수 2026.11.17 · 한글 읽기는 참고용입니다. · 즐겨찾기는 이 기기에 저장됩니다.</footer></main><script>
-let data=[],tab='list',limit=40,index=0;let favorites=[];try{favorites=JSON.parse(localStorage.getItem('seon_quote_favorites_v1')||'[]')}catch(e){};const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const pron={1:'러브, 앤드 유 셸 비 러브드.',13:'러브 이즈 미얼리 어 매드니스.',14:'이프 뮤직 비 더 푸드 오브 러브, 플레이 온.'};function filtered(){let q=$('#search').value.toLowerCase().trim(),c=$('#category').value;return data.filter(x=>(tab!=='fav'||favorites.includes(x.id))&&(!c||(x.tags||[x.keyword]).includes(c))&&(!q||[x.quote_en,x.quote_ko,x.author,x.source,...(x.tags||[x.keyword])].some(v=>String(v||'').toLowerCase().includes(q))))}function card(x){return `<article class="card"><div class="tag">${esc((x.tags||[x.keyword]).join(' · '))} · #${esc(x.id)}</div><div class="english">${esc(x.quote_en)}</div><details class="pron"><summary>한글 읽기 · 참고 표기</summary><p class="pron-body">${x.pronunciation_ko?esc(x.pronunciation_ko):pron[x.id]?esc(pron[x.id]):'한글 발음 준비 중'}</p></details><div class="ko">${esc(x.quote_ko)}</div>${tab==='reel'&&x.learning?`<div class="study-note"><strong>문장 속 단어</strong><div class="study-words">${x.learning.words.map(w=>`<span><b>${esc(w.en)}</b> ${esc(w.ko)}</span>`).join('')}</div><p>${esc(x.learning.association)}</p></div>`:''}<details class="source"><summary>작성자와 출처 보기</summary><div class="source-body">${esc(x.author)}<br>${esc(x.source)}${x.source_url&&/^https:\/\//.test(x.source_url)?`<br><a href="${esc(x.source_url)}" target="_blank" rel="noopener noreferrer">영어 자료 보기 ↗</a>`:''}<br>${esc(x.source_text_checked?"영어 자료 본문 대조 · 최초 유래·번역 추가 검토 가능":"원저작·최초 출전 추가 대조 필요")}${x.usage_note?`<p>${esc(x.usage_note)}</p>`:""}</div></details><div class="buttons"><button class="btn" data-speak="${x.id}">▶ 영어 듣기</button><button class="btn star" data-fav="${x.id}">${favorites.includes(x.id)?'★ 저장됨':'☆ 마음에 담기'}</button></div></article>`}function renderCategories(){const oldScroll=$('#reelCategoryList').scrollLeft,c=$('#category').value;$('#reelCategoryLabel').textContent='주제 · '+(c||'전체');$('#reelCategoryList').innerHTML=['',...Array.from($('#category').options).slice(1).map(o=>o.value)].map(v=>`<button class="reel-chip ${c===v?'selected':''}" data-reel-category="${esc(v)}" aria-pressed="${c===v}">${esc(v||'전체')}</button>`).join('');$('#reelCategoryList').scrollLeft=oldScroll}function render(){const a=filtered();renderCategories();$('#info').textContent=`${a.length}개 문장${tab==='reel'?' · '+(a.length?index+1:0)+' / '+a.length:''}`;$('#list').classList.toggle('hidden',tab==='reel');$('#reel').classList.toggle('hidden',tab!=='reel');$('#more').classList.toggle('hidden',tab==='reel'||limit>=a.length);if(tab==='reel'){index=Math.max(0,Math.min(index,a.length-1));$('#reelCard').innerHTML=a.length?card(a[index]):'<p>해당하는 문장이 없습니다.</p>';$('#reelCount').textContent=(a.length?index+1:0)+' / '+a.length;$('#reelEdge').textContent=!a.length?'문장이 없습니다':index===0?'첫 문장입니다':index===a.length-1?'마지막 문장입니다':''}else $('#list').innerHTML=a.slice(0,limit).map(card).join('')||'<p>해당하는 문장이 없습니다.</p>'}document.addEventListener('click',e=>{let b=e.target.closest('button');if(!b)return;if(b.dataset.tab){tab=b.dataset.tab;index=0;limit=40;document.querySelectorAll('.tab').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-pressed',String(x===b))});document.body.classList.toggle('reel-open',tab==='reel');render()}if(b.dataset.fav){let id=Number(b.dataset.fav);favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];localStorage.setItem('seon_quote_favorites_v1',JSON.stringify(favorites));render()}if(b.hasAttribute('data-reel-category')){$('#category').value=b.dataset.reelCategory;index=0;limit=40;$('#reelCategoryList').hidden=true;$('#reelCategoryHint').hidden=true;$('#reelCategoryToggle').setAttribute('aria-expanded','false');$('#reelCategoryToggle').textContent='주제 선택 ▾';render();return}if(b.dataset.speak){let x=data.find(x=>x.id===Number(b.dataset.speak));if(!('speechSynthesis'in window)){alert('이 기기에서는 음성 듣기를 지원하지 않습니다.');return}speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(x.quote_en);u.lang='en-US';u.rate=.82;speechSynthesis.speak(u)}});$('#search').oninput=$('#category').onchange=()=>{index=0;limit=40;render()};$('#more').onclick=()=>{limit+=40;render()};$('#reelCategoryToggle').onclick=()=>{const list=$('#reelCategoryList'),toggle=$('#reelCategoryToggle');list.hidden=!list.hidden;$('#reelCategoryHint').hidden=list.hidden;toggle.setAttribute('aria-expanded',String(!list.hidden));toggle.textContent=list.hidden?'주제 선택 ▾':'주제 접기 ▲'};$('#reelClose').onclick=()=>{tab='list';document.body.classList.remove('reel-open');document.querySelectorAll('.tab').forEach(x=>{x.classList.toggle('active',x.dataset.tab==='list');x.setAttribute('aria-pressed',String(x.dataset.tab==='list'))});render()};function moveReel(step){const n=filtered().length;if(!n)return;index=Math.max(0,Math.min(n-1,index+step));render()}let touchStart=null;const surface=$('#reel');surface.addEventListener('touchstart',e=>{if(e.touches.length!==1)return;const card=e.target.closest('.card');touchStart={x:e.touches[0].clientX,y:e.touches[0].clientY,card,scrollTop:card?card.scrollTop:0};},{passive:true});surface.addEventListener('touchend',e=>{if(!touchStart)return;const t=e.changedTouches[0],dx=t.clientX-touchStart.x,dy=t.clientY-touchStart.y,card=touchStart.card,start=touchStart.scrollTop;const wasScrolling=card&&card.scrollHeight>card.clientHeight+2&&((dy<0&&start<card.scrollHeight-card.clientHeight-2)||(dy>0&&start>2));touchStart=null;if(!wasScrolling&&!e.target.closest('.reel-category-list')&&Math.abs(dy)>55&&Math.abs(dy)>Math.abs(dx)*1.3){moveReel(dy<0?1:-1)}},{passive:true});document.addEventListener('keydown',e=>{if(tab!=='reel'||e.target.closest('input,select,.reel-category-list'))return;if(e.key==='ArrowDown'||e.key==='PageDown'){e.preventDefault();moveReel(1)}else if(e.key==='ArrowUp'||e.key==='PageUp'){e.preventDefault();moveReel(-1)}else if(e.key==='Escape')$('#reelClose').click()});fetch('./quotes.json').then(r=>{if(!r.ok)throw Error();return r.json()}).then(x=>{data=x;$('#total').textContent=x.length.toLocaleString('ko-KR');[...new Set(x.flatMap(v=>v.tags||[v.keyword]))].sort().forEach(v=>{let o=document.createElement('option');o.value=o.textContent=v;$('#category').appendChild(o)});render()}).catch(()=>{$('#list').textContent='문장 파일을 불러오지 못했습니다. 잠시 후 다시 열어 주세요.'});
+let data=[],tab='list',limit=40,index=0;let favorites=[];try{favorites=JSON.parse(localStorage.getItem('seon_quote_favorites_v1')||'[]')}catch(e){};const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const pron={1:'러브, 앤드 유 셸 비 러브드.',13:'러브 이즈 미얼리 어 매드니스.',14:'이프 뮤직 비 더 푸드 오브 러브, 플레이 온.'};function filtered(){let q=$('#search').value.toLowerCase().trim(),c=$('#category').value;return data.filter(x=>(tab!=='fav'||favorites.includes(x.id))&&(!c||(x.tags||[x.keyword]).includes(c))&&(!q||[x.quote_en,x.quote_ko,x.author,x.source,...(x.tags||[x.keyword])].some(v=>String(v||'').toLowerCase().includes(q))))}
+const focusStopWords = new Set((
+  'a an the and or but nor for of in on at by to from with without upon unto into out about over under ' +
+  'up down off through as if than that which whom whose who whom when where why how what whatever ' +
+  'so such is am are be was were been being do does did done have has had can could may might shall ' +
+  'will would should must it its this these those there here then yet just even only also still ' +
+  'too very more most less least much many little few some any all each every both either neither ' +
+  'one two three i me my mine we us our ours you your yours he him his she her hers they them their ' +
+  'theirs itself himself herself yourself ourselves themselves not no never ever yes again else ' +
+  'own other others another same ever always whoso thou thee thy thine ye hath doth dost hast ' +
+  'shalt art wert tis twas twere doth unto whilst ere wherein whereof o oh ah nay yea sir ' +
+  'man men woman women person people things thing someone somebody something anything nothing ' +
+  'everything anyone everyone nobody nowhere somewhere whoever thus therefore rather indeed now once twice because ' +
+  'before after while until till whether together ever say says said go goes going come comes ' +
+  'coming get gets got make makes made take takes took use uses used keep keeps kept let lets ' +
+  'look looks looked see sees saw seen seem seems know knows knew known think thinks thought ' +
+  'put puts give gives gave given tell tells told find finds found call calls called want wants ' +
+  'need needs like likes liked well better best bad worse worst good great greater greatest ' +
+  'first second last way ways place places time times day days end ends'
+).split(/\s+/));
+
+const focusTheme = {
+  사랑: 'love beloved affection passion heart tender',
+  우정: 'friend friendship companion fellowship neighbor',
+  감사: 'thank thanks grateful gratitude gratitude praise',
+  배움: 'learn teach knowledge lesson study read book',
+  지혜: 'wise wisdom reason understand lesson fool knowledge',
+  인생: 'life live living death choice',
+  행복: 'happy happiness joy glad pleasure delight',
+  희망: 'hope hopeful wish dream',
+  신뢰: 'trust faith faithful promise',
+  도전: 'dare risk effort try resolve',
+  용기: 'courage bold brave fear coward',
+  역경: 'adversity trouble hardship trial sorrow',
+  자유: 'free freedom liberty bound unbound',
+  진실: 'truth true honest honesty',
+  거짓말: 'lie liar false deceit',
+  절약: 'save penny pence pound spend waste',
+  변화: 'change alter transform become',
+  실행: 'act action deed practice work',
+  성공: 'success achievement victory win',
+  가난: 'poor poverty hunger beggar',
+  습관: 'habit custom practice',
+  경청: 'hear listen ear mouth',
+  말조심: 'tongue mouth speak speech silence',
+  평판: 'name reputation honour honor',
+  신앙: 'faith pray prayer god belief',
+  교육: 'teach teacher learn education children',
+  분노: 'anger angry wrath rage',
+  고통: 'pain suffer suffering sorrow grief distress',
+  죽음: 'death die dead grave',
+  기억: 'remember memory remembrance forget',
+  성장: 'grow growth seed root',
+  시간: 'time hour day years age',
+  걱정: 'worry trouble cares fear',
+  신중함: 'caution heed beware prudence',
+  선택: 'choose choice decide decision',
+  필요: 'necessity need want hunger',
+  용서: 'forgive forgiveness forgive mercy'
+};
+
+const focusPhrases = /\b(?:bear(?:s|ing)? it out|in vain|not without|as you sow|reap what you sow|in the long run|at first sight|out of sight|out of mind|by degrees|give up|put off|pass away|take heart|turn a blind eye|let go|give in|break the ice|a matter of chance|set free|make haste|get rid of|in the end|to no purpose|give way|hold one['’]s tongue|keep one['’]s word|at a loss|make amends|lose heart|fall in love)\b/gi;
+const focusOverrides = {
+  2: ['caprice', 'lifelong passion', 'lasts'],
+  4: ['alters', 'bears it out', 'edge of doom'],
+  6: ['breathe', 'lives', 'gives life'],
+  9: ['search another', 'waiting for you'],
+  13: ['madness', 'Love'],
+  14: ['food of love', 'play on'],
+  19: ['wretch', 'Perdition', 'love'],
+  54: ['friend', 'adversity'],
+  81: ['pray', 'distress', 'abundance'],
+  213: ['Enthusiasm', 'Endurance'],
+  237: ['read', 'deliberately', 'reservedly'],
+  584: ['Cause and effect', 'cannot be severed'],
+  743: ['free', 'not without', 'unbound'],
+  849: ['ill wind', 'blows nobody good'],
+  1061: ['Liars', 'memories'],
+  1111: ['drives out', 'One nail']
+};
+
+const focusWord = /[\p{L}][\p{L}\p{M}]*(?:['’][\p{L}\p{M}]+)*/gu;
+let focusRangesById = new Map();
+
+function focusStem(word) {
+  return word.toLowerCase().replace(/['’]s$/, '').replace(/ies$/, 'y')
+    .replace(/(ing|ed|ly)$/, '').replace(/([^s])s$/, '$1');
+}
+
+function buildFocusRanges(quotes) {
+  focusRangesById = new Map();
+  const occurrences = new Map();
+  const wordsByQuote = quotes.map(({quote_en}) => [...quote_en.matchAll(focusWord)]);
+  for (const words of wordsByQuote) {
+    for (const key of new Set(words.map(word => focusStem(word[0])))) {
+      occurrences.set(key, (occurrences.get(key) || 0) + 1);
+    }
+  }
+
+  quotes.forEach((quote, index) => {
+    const english = quote.quote_en;
+    const words = wordsByQuote[index];
+    const priority = focusOverrides[quote.id] || quote.learning?.words?.map(word => word.en) || [];
+    const theme = new Set((quote.tags || [quote.keyword])
+      .flatMap(tag => (focusTheme[tag] || '').split(' ')).filter(Boolean).map(focusStem));
+    const candidates = [];
+    const add = (start, value, rank, key = focusStem(value)) =>
+      candidates.push({start, end: start + value.length, rank, key});
+
+    for (const [position, term] of priority.entries()) {
+      const pattern = term.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      if (!pattern) continue;
+      const match = [...english.matchAll(new RegExp('\\b' + pattern.replace(/['’]/g, "['’]") + '\\b', 'gi'))][0];
+      if (match) {
+        add(match.index, match[0], 40 - position);
+      } else if (!term.includes(' ')) {
+        const inflected = words.find(word => focusStem(word[0]) === focusStem(term));
+        if (inflected) add(inflected.index, inflected[0], 40 - position);
+      }
+    }
+    for (const match of english.matchAll(focusPhrases)) add(match.index, match[0], 12);
+    for (const [position, match] of words.entries()) {
+      const word = match[0].toLowerCase();
+      const key = focusStem(word);
+      const contracted = word.split(/['’]/)[0];
+      if (word.length < 3 || focusStopWords.has(contracted) || focusStopWords.has(key)) continue;
+      const frequency = occurrences.get(key) || 1;
+      const rarity = Math.min(3, Math.log2(1 + quotes.length / frequency) / 3);
+      const capitalized = position > 0 && match[0] !== word;
+      const rank = rarity + Math.min(word.length, 10) / 10 +
+        (theme.has(key) ? 4 : 0) + (/(tion|sion|ment|ness|ity|ance|ence|ship|hood|dom)$/.test(word) ? 1 : 0) -
+        (capitalized ? 1.2 : 0);
+      add(match.index, match[0], rank, key);
+    }
+    const limit = words.length <= 5 ? 1 : words.length <= 15 ? 2 : 3;
+    const selected = [];
+    for (const candidate of candidates.sort((a, b) => b.rank - a.rank || a.start - b.start)) {
+      if (selected.some(item => item.key === candidate.key ||
+        (item.start < candidate.end && candidate.start < item.end))) continue;
+      selected.push(candidate);
+      if (selected.length === limit) break;
+    }
+    if (!selected.length && words.length) {
+      const fallback = words.reduce((best, word) => word[0].length >= best[0].length ? word : best);
+      selected.push({start: fallback.index, end: fallback.index + fallback[0].length});
+    }
+    focusRangesById.set(quote.id, selected.sort((a, b) => a.start - b.start));
+  });
+}
+
+function renderEnglish(quote) {
+  let html = '';
+  let cursor = 0;
+  for (const {start, end} of focusRangesById.get(quote.id) || []) {
+    html += esc(quote.quote_en.slice(cursor, start));
+    html += '<span class="quote-focus">' + esc(quote.quote_en.slice(start, end)) + '</span>';
+    cursor = end;
+  }
+  return html + esc(quote.quote_en.slice(cursor));
+}
+
+function card(x){return `<article class="card"><div class="tag">${esc((x.tags||[x.keyword]).join(' · '))} · #${esc(x.id)}</div><div class="english">${renderEnglish(x)}</div><details class="pron"><summary>한글 읽기 · 참고 표기</summary><p class="pron-body">${x.pronunciation_ko?esc(x.pronunciation_ko):pron[x.id]?esc(pron[x.id]):'한글 발음 준비 중'}</p></details><div class="ko">${esc(x.quote_ko)}</div>${tab==='reel'&&x.learning?`<div class="study-note"><strong>문장 속 단어</strong><div class="study-words">${x.learning.words.map(w=>`<span><b>${esc(w.en)}</b> ${esc(w.ko)}</span>`).join('')}</div><p>${esc(x.learning.association)}</p></div>`:''}<details class="source"><summary>작성자와 출처 보기</summary><div class="source-body">${esc(x.author)}<br>${esc(x.source)}${x.source_url&&/^https:\/\//.test(x.source_url)?`<br><a href="${esc(x.source_url)}" target="_blank" rel="noopener noreferrer">영어 자료 보기 ↗</a>`:''}<br>${esc(x.source_text_checked?"영어 자료 본문 대조 · 최초 유래·번역 추가 검토 가능":"원저작·최초 출전 추가 대조 필요")}${x.usage_note?`<p>${esc(x.usage_note)}</p>`:""}</div></details><div class="buttons"><button class="btn" data-speak="${x.id}">▶ 영어 듣기</button><button class="btn star" data-fav="${x.id}">${favorites.includes(x.id)?'★ 저장됨':'☆ 마음에 담기'}</button></div></article>`}function renderCategories(){const oldScroll=$('#reelCategoryList').scrollLeft,c=$('#category').value;$('#reelCategoryLabel').textContent='주제 · '+(c||'전체');$('#reelCategoryList').innerHTML=['',...Array.from($('#category').options).slice(1).map(o=>o.value)].map(v=>`<button class="reel-chip ${c===v?'selected':''}" data-reel-category="${esc(v)}" aria-pressed="${c===v}">${esc(v||'전체')}</button>`).join('');$('#reelCategoryList').scrollLeft=oldScroll}function render(){const a=filtered();renderCategories();$('#info').textContent=`${a.length}개 문장${tab==='reel'?' · '+(a.length?index+1:0)+' / '+a.length:''}`;$('#list').classList.toggle('hidden',tab==='reel');$('#reel').classList.toggle('hidden',tab!=='reel');$('#more').classList.toggle('hidden',tab==='reel'||limit>=a.length);if(tab==='reel'){index=Math.max(0,Math.min(index,a.length-1));$('#reelCard').innerHTML=a.length?card(a[index]):'<p>해당하는 문장이 없습니다.</p>';$('#reelCount').textContent=(a.length?index+1:0)+' / '+a.length;$('#reelEdge').textContent=!a.length?'문장이 없습니다':index===0?'첫 문장입니다':index===a.length-1?'마지막 문장입니다':''}else $('#list').innerHTML=a.slice(0,limit).map(card).join('')||'<p>해당하는 문장이 없습니다.</p>'}document.addEventListener('click',e=>{let b=e.target.closest('button');if(!b)return;if(b.dataset.tab){tab=b.dataset.tab;index=0;limit=40;document.querySelectorAll('.tab').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-pressed',String(x===b))});document.body.classList.toggle('reel-open',tab==='reel');render()}if(b.dataset.fav){let id=Number(b.dataset.fav);favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];localStorage.setItem('seon_quote_favorites_v1',JSON.stringify(favorites));render()}if(b.hasAttribute('data-reel-category')){$('#category').value=b.dataset.reelCategory;index=0;limit=40;$('#reelCategoryList').hidden=true;$('#reelCategoryHint').hidden=true;$('#reelCategoryToggle').setAttribute('aria-expanded','false');$('#reelCategoryToggle').textContent='주제 선택 ▾';render();return}if(b.dataset.speak){let x=data.find(x=>x.id===Number(b.dataset.speak));if(!('speechSynthesis'in window)){alert('이 기기에서는 음성 듣기를 지원하지 않습니다.');return}speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(x.quote_en);u.lang='en-US';u.rate=.82;speechSynthesis.speak(u)}});$('#search').oninput=$('#category').onchange=()=>{index=0;limit=40;render()};$('#more').onclick=()=>{limit+=40;render()};$('#reelCategoryToggle').onclick=()=>{const list=$('#reelCategoryList'),toggle=$('#reelCategoryToggle');list.hidden=!list.hidden;$('#reelCategoryHint').hidden=list.hidden;toggle.setAttribute('aria-expanded',String(!list.hidden));toggle.textContent=list.hidden?'주제 선택 ▾':'주제 접기 ▲'};$('#reelClose').onclick=()=>{tab='list';document.body.classList.remove('reel-open');document.querySelectorAll('.tab').forEach(x=>{x.classList.toggle('active',x.dataset.tab==='list');x.setAttribute('aria-pressed',String(x.dataset.tab==='list'))});render()};function moveReel(step){const n=filtered().length;if(!n)return;index=Math.max(0,Math.min(n-1,index+step));render()}let touchStart=null;const surface=$('#reel');surface.addEventListener('touchstart',e=>{if(e.touches.length!==1)return;const card=e.target.closest('.card');touchStart={x:e.touches[0].clientX,y:e.touches[0].clientY,card,scrollTop:card?card.scrollTop:0};},{passive:true});surface.addEventListener('touchend',e=>{if(!touchStart)return;const t=e.changedTouches[0],dx=t.clientX-touchStart.x,dy=t.clientY-touchStart.y,card=touchStart.card,start=touchStart.scrollTop;const wasScrolling=card&&card.scrollHeight>card.clientHeight+2&&((dy<0&&start<card.scrollHeight-card.clientHeight-2)||(dy>0&&start>2));touchStart=null;if(!wasScrolling&&!e.target.closest('.reel-category-list')&&Math.abs(dy)>55&&Math.abs(dy)>Math.abs(dx)*1.3){moveReel(dy<0?1:-1)}},{passive:true});document.addEventListener('keydown',e=>{if(tab!=='reel'||e.target.closest('input,select,.reel-category-list'))return;if(e.key==='ArrowDown'||e.key==='PageDown'){e.preventDefault();moveReel(1)}else if(e.key==='ArrowUp'||e.key==='PageUp'){e.preventDefault();moveReel(-1)}else if(e.key==='Escape')$('#reelClose').click()});fetch('./quotes.json').then(r=>{if(!r.ok)throw Error();return r.json()}).then(x=>{data=x;buildFocusRanges(x);$('#total').textContent=x.length.toLocaleString('ko-KR');[...new Set(x.flatMap(v=>v.tags||[v.keyword]))].sort().forEach(v=>{let o=document.createElement('option');o.value=o.textContent=v;$('#category').appendChild(o)});render()}).catch(()=>{$('#list').textContent='문장 파일을 불러오지 못했습니다. 잠시 후 다시 열어 주세요.'});
 </script></body></html>

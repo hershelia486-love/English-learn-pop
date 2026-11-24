@@ -108,7 +108,30 @@ const collections = {
   masters: { title: '거장의 문장', manifest: './collections/masters/manifest.json' }
 };
 let collection = 'heart';
-let data=[],tab='list',limit=40,index=0;let favorites=[];try{favorites=JSON.parse(localStorage.getItem('seon_quote_favorites_v1')||'[]')}catch(e){};const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const pron={1:'러브, 앤드 유 셸 비 러브드.',13:'러브 이즈 미얼리 어 매드니스.',14:'이프 뮤직 비 더 푸드 오브 러브, 플레이 온.'};function filtered(){let q=$('#search').value.toLowerCase().trim(),c=$('#category').value;return data.filter(x=>(tab!=='fav'||favorites.includes(x.id))&&(!c||(x.tags||[x.keyword]).includes(c))&&(!q||[x.quote_en,x.quote_ko,x.author,x.source,...(x.tags||[x.keyword])].some(v=>String(v||'').toLowerCase().includes(q))))}
+let data=[],tab='list',limit=40,index=0;let favorites=[];try{favorites=JSON.parse(localStorage.getItem('seon_quote_favorites_v1')||'[]')}catch(e){};const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const pron={1:'러브, 앤드 유 셸 비 러브드.',13:'러브 이즈 미얼리 어 매드니스.',14:'이프 뮤직 비 더 푸드 오브 러브, 플레이 온.'};
+
+function shuffledQuotes(quotes) {
+  const order = quotes.slice();
+  for (let i = order.length - 1; i > 0; i--) {
+    const other = Math.floor(Math.random() * (i + 1));
+    [order[i], order[other]] = [order[other], order[i]];
+  }
+  return order;
+}
+
+function filtered() {
+  const query = $('#search').value.toLowerCase().trim();
+  const category = $('#category').value;
+  const rows = tab === 'list' ? collections[collection].listOrder ?? [] : data;
+  return rows.filter(quote => {
+    const tags = quote.tags || [quote.keyword];
+    return (tab !== 'fav' || favorites.includes(quote.id)) &&
+      (!category || tags.includes(category)) &&
+      (!query || [quote.quote_en, quote.quote_ko, quote.author, quote.source, ...tags]
+        .some(value => String(value || '').toLowerCase().includes(query)));
+  });
+}
+
 const focusStopWords = new Set((
   'a an the and or but nor for of in on at by to from with without upon unto into out about over under ' +
   'up down off through as if than that which whom whose who whom when where why how what whatever ' +
@@ -2473,6 +2496,7 @@ function selectCollection(key) {
     current.loading = loadCollection(current)
       .then(rows => {
         current.rows = rows;
+        current.listOrder = shuffledQuotes(rows);
       })
       .catch(() => {
         current.error = '문장 파일을 불러오지 못했습니다. 모음 이름을 눌러 다시 시도해 주세요.';

@@ -74,7 +74,7 @@ body.reel-open{overflow:hidden}.reel-overlay{position:fixed;inset:0;z-index:10;b
   <h1 id="storyHomeTitle">랜덤 이야기</h1>
   <p>오늘 기분에 맞는 이야기를 골라 보세요. 여러 주제의 영어 문장이 세 단계로 이어져요.</p>
   <fieldset class="story-moods">
-    <legend>지금 어떤 기분인가요?</legend>
+    <legend id="storyMoodLegend">지금 어떤 기분인가요?</legend>
     <div class="story-mood-options" id="storyMoods">
       <label class="story-mood"><input type="radio" name="story-mood" value="" checked> 아무 이야기나</label>
     </div>
@@ -2137,7 +2137,7 @@ function toggleMeaning(button) {
 }
 
 function card(x){return `<article class="card"><div class="tag">${esc((x.tags||[x.keyword]).join(' · '))} · #${esc(x.id)}</div><div class="english">${renderEnglish(x)}</div><details class="pron"><summary>한글 읽기 · 참고 표기</summary><p class="pron-body">${x.pronunciation_ko?esc(x.pronunciation_ko):pron[x.id]?esc(pron[x.id]):'한글 발음 준비 중'}</p></details><div class="ko">${esc(x.quote_ko)}</div>${tab==='reel'&&x.learning?`<div class="study-note"><strong>문장 속 단어</strong><div class="study-words">${x.learning.words.map(w=>`<span><b>${esc(w.en)}</b> ${esc(w.ko)}</span>`).join('')}</div><p>${esc(x.learning.association)}</p></div>`:''}<details class="source"><summary>작성자와 출처 보기</summary><div class="source-body">${esc(x.author)}<br>${esc(x.source)}${x.source_url&&/^https:\/\//.test(x.source_url)?`<br><a href="${esc(x.source_url)}" target="_blank" rel="noopener noreferrer">영어 자료 보기 ↗</a>`:''}<br>${esc(x.source_text_checked?"영어 자료 본문 대조 · 최초 유래·번역 추가 검토 가능":"원저작·최초 출전 추가 대조 필요")}${x.usage_note?`<p>${esc(x.usage_note)}</p>`:""}${x.reflection_question?`<p>${esc(x.reflection_question)}</p>`:""}</div></details><div class="buttons"><button class="btn" data-speak="${x.id}">▶ 영어 듣기</button><button class="btn star" data-fav="${x.id}">${favorites.includes(x.id)?'★ 저장됨':'☆ 마음에 담기'}</button></div></article>`}function renderCategories(){const oldScroll=$('#reelCategoryList').scrollLeft,c=$('#category').value;$('#reelCategoryLabel').textContent='주제 · '+(c||'전체');$('#reelCategoryList').innerHTML=['',...Array.from($('#category').options).slice(1).map(o=>o.value)].map(v=>`<button class="reel-chip ${c===v?'selected':''}" data-reel-category="${esc(v)}" aria-pressed="${c===v}">${esc(v||'전체')}</button>`).join('');$('#reelCategoryList').scrollLeft=oldScroll}
-const storyArcs = [
+const heartStoryArcs = [
   {
     id: 'heavy',
     mood: '마음이 무거워요',
@@ -2169,16 +2169,62 @@ const storyArcs = [
     ]
   }
 ];
-for (const arc of storyArcs) {
-  const label = document.createElement('label');
-  label.className = 'story-mood';
-  const input = document.createElement('input');
-  input.type = 'radio';
-  input.name = 'story-mood';
-  input.value = arc.id;
-  label.append(input, arc.mood);
-  $('#storyMoods').append(label);
+const masterStoryArcs = [
+  {
+    id: 'learn',
+    mood: '새로운 걸 배우고 싶어요',
+    title: '배운 것을 내 것으로 만드는 길',
+    stages: [
+      { title: '내가 아는 것부터 살피기', note: '익숙해서 질문하지 않았던 것 하나를 떠올려 보세요.', tags: ['자기인식', '심리', '관점'] },
+      { title: '배우는 방법 바꿔 보기', note: '읽기, 질문하기, 직접 해 보기 중 하나를 골라 보세요.', tags: ['독학', '교육', '전문성'] },
+      { title: '오늘 배운 것을 써 보기', note: '배운 한 가지를 어디에 써 볼지 생각해 보세요.', tags: ['실행력', '습관', '집중력'] }
+    ]
+  },
+  {
+    id: 'create',
+    mood: '아이디어를 작품으로 만들고 싶어요',
+    title: '한 생각을 끝까지 다듬는 길',
+    stages: [
+      { title: '낯설게 바라보기', note: '평소 지나치던 장면에서 눈에 걸린 것을 하나 골라 보세요.', tags: ['관점', '창작', '관찰'] },
+      { title: '말과 글로 모양 잡기', note: '떠오른 생각을 한 문장이나 한 장면으로 옮겨 보세요.', tags: ['글쓰기', '스토리텔링', '콘텐츠'] },
+      { title: '작은 결과물로 남기기', note: '오늘 마칠 수 있는 한 부분을 정해 보세요.', tags: ['생산성', '집중력', '실행력'] }
+    ]
+  },
+  {
+    id: 'decide',
+    mood: '일과 사람 사이에서 결정을 내리고 싶어요',
+    title: '혼자 생각한 결정을 함께 실행하는 길',
+    stages: [
+      { title: '사람들의 입장 살피기', note: '같은 상황을 다른 사람은 어떻게 볼지 생각해 보세요.', tags: ['관계', '심리', '협상'] },
+      { title: '선택지와 대가 따져 보기', note: '각 선택에서 얻는 것과 감수할 것을 적어 보세요.', tags: ['의사결정', '리스크', '전략'] },
+      { title: '다음 행동 정하기', note: '누구와 무엇을 먼저 시작할지 정해 보세요.', tags: ['리더십', '실행력', '습관'] }
+    ]
+  }
+];
+
+function activeStoryArcs() {
+  return collection === 'masters' ? masterStoryArcs : heartStoryArcs;
 }
+
+function renderStoryChoices() {
+  const container = $('#storyMoods');
+  const any = container.firstElementChild;
+  container.replaceChildren(any);
+  any.querySelector('input').checked = true;
+  for (const arc of activeStoryArcs()) {
+    const label = document.createElement('label');
+    label.className = 'story-mood';
+    const input = document.createElement('input');
+    input.type = 'radio';
+    input.name = 'story-mood';
+    input.value = arc.id;
+    label.append(input, arc.mood);
+    container.append(label);
+  }
+  $('#storyHomeTitle').textContent = collection === 'masters' ? '거장의 랜덤 이야기' : '랜덤 이야기';
+  $('#storyMoodLegend').textContent = collection === 'masters' ? '어떤 이야기부터 읽을까요?' : '지금 어떤 기분인가요?';
+}
+
 let randomStory = null;
 let storyReading = false;
 
@@ -2186,8 +2232,8 @@ function pickOne(items) {
   return items[Math.floor(Math.random() * items.length)];
 }
 
-function buildStoryDeck(quotes, size, previous, selectedArc) {
-  const arcs = storyArcs.filter(arc => arc !== previous?.arc);
+function buildStoryDeck(quotes, size, previous, selectedArc, availableArcs) {
+  const arcs = availableArcs.filter(arc => arc !== previous?.arc);
   const arc = selectedArc || pickOne(arcs);
   const byId = new Map(quotes.map(quote => [quote.id, quote]));
   const seenQuotes = new Set();
@@ -2197,8 +2243,13 @@ function buildStoryDeck(quotes, size, previous, selectedArc) {
   const lengths = size === 30 ? [10, 10, 10] : [3, 4, 3];
 
   arc.stages.forEach((stage, stageIndex) => {
-    const pool = Object.entries(stage.picks).flatMap(([topic, ids]) =>
-      ids.map(id => ({ quote: byId.get(id), topic, stageIndex })).filter(item => item.quote));
+    const pool = stage.tags
+      ? quotes.flatMap(quote => {
+          const topic = stage.tags.find(tag => (quote.tags || [quote.keyword]).includes(tag));
+          return topic ? [{ quote, topic, stageIndex }] : [];
+        })
+      : Object.entries(stage.picks).flatMap(([topic, ids]) =>
+          ids.map(id => ({ quote: byId.get(id), topic, stageIndex })).filter(item => item.quote));
     for (let i = 0; i < lengths[stageIndex]; i++) {
       const options = pool.filter(item => !seenQuotes.has(item.quote.id));
       if (!options.length) throw new Error('Not enough quotes for ' + stage.title);
@@ -2246,7 +2297,7 @@ function openStory(size, selectedArc) {
   if (!data.length) return;
   if (size) {
     try {
-      randomStory = buildStoryDeck(data, size, randomStory, selectedArc);
+      randomStory = buildStoryDeck(data, size, randomStory, selectedArc, activeStoryArcs());
       $('#storyError').textContent = '';
     } catch (error) {
       $('#storyError').textContent = '이야기를 만들지 못했어요. 잠시 후 다시 눌러 주세요.';
@@ -2273,7 +2324,7 @@ function renderStoryReading(item) {
   $('#storyPrevious').disabled = index === 0;
   $('#storyNext').hidden = index === cards.length - 1;
   $('#storyReroll').hidden = index !== cards.length - 1;
-  $('#storyReroll').textContent = randomStory.selectedArc ? `같은 기분으로 ${randomStory.size}장 더` : `새 이야기 ${randomStory.size}장`;
+  $('#storyReroll').textContent = randomStory.selectedArc ? `같은 ${collection === 'masters' ? '주제로' : '기분으로'} ${randomStory.size}장 더` : `새 이야기 ${randomStory.size}장`;
 }
 
 function render() {
@@ -2320,7 +2371,7 @@ function render() {
   }
 }
 
-document.addEventListener('click',e=>{let b=e.target.closest('button');if(!b)return;if(b.hasAttribute('data-meaning')){toggleMeaning(b);return;}if(b.dataset.collection){selectCollection(b.dataset.collection);return;}if(b.dataset.tab){activateTab(b.dataset.tab);return;}if(b.dataset.storySize){const mood = $('input[name="story-mood"]:checked').value;openStory(Number(b.dataset.storySize),storyArcs.find(arc => arc.id === mood));return;}if(b.dataset.fav){const id=data.find(x=>String(x.id)===b.dataset.fav)?.id;if(id===undefined)return;favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];localStorage.setItem('seon_quote_favorites_v1',JSON.stringify(favorites));render()}if(b.hasAttribute('data-reel-category')){$('#category').value=b.dataset.reelCategory;index=0;limit=40;$('#reelCategoryList').hidden=true;$('#reelCategoryHint').hidden=true;$('#reelCategoryToggle').setAttribute('aria-expanded','false');$('#reelCategoryToggle').textContent='주제 선택 ▾';render();return}if(b.dataset.speak){const x=data.find(x=>String(x.id)===b.dataset.speak);if(!x)return;if(!('speechSynthesis'in window)){alert('이 기기에서는 음성 듣기를 지원하지 않습니다.');return}speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(x.quote_en);u.lang='en-US';u.rate=.82;speechSynthesis.speak(u)}});$('#search').oninput=$('#category').onchange=()=>{index=0;limit=40;render()};$('#more').onclick=()=>{limit+=40;render()};$('#reelCategoryToggle').onclick=()=>{const list=$('#reelCategoryList'),toggle=$('#reelCategoryToggle');list.hidden=!list.hidden;$('#reelCategoryHint').hidden=list.hidden;toggle.setAttribute('aria-expanded',String(!list.hidden));toggle.textContent=list.hidden?'주제 선택 ▾':'주제 접기 ▲'};$('#storyResume').onclick = () => openStory();
+document.addEventListener('click',e=>{let b=e.target.closest('button');if(!b)return;if(b.hasAttribute('data-meaning')){toggleMeaning(b);return;}if(b.dataset.collection){selectCollection(b.dataset.collection);return;}if(b.dataset.tab){activateTab(b.dataset.tab);return;}if(b.dataset.storySize){const mood = $('input[name="story-mood"]:checked').value;openStory(Number(b.dataset.storySize),activeStoryArcs().find(arc => arc.id === mood));return;}if(b.dataset.fav){const id=data.find(x=>String(x.id)===b.dataset.fav)?.id;if(id===undefined)return;favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];localStorage.setItem('seon_quote_favorites_v1',JSON.stringify(favorites));render()}if(b.hasAttribute('data-reel-category')){$('#category').value=b.dataset.reelCategory;index=0;limit=40;$('#reelCategoryList').hidden=true;$('#reelCategoryHint').hidden=true;$('#reelCategoryToggle').setAttribute('aria-expanded','false');$('#reelCategoryToggle').textContent='주제 선택 ▾';render();return}if(b.dataset.speak){const x=data.find(x=>String(x.id)===b.dataset.speak);if(!x)return;if(!('speechSynthesis'in window)){alert('이 기기에서는 음성 듣기를 지원하지 않습니다.');return}speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(x.quote_en);u.lang='en-US';u.rate=.82;speechSynthesis.speak(u)}});$('#search').oninput=$('#category').onchange=()=>{index=0;limit=40;render()};$('#more').onclick=()=>{limit+=40;render()};$('#reelCategoryToggle').onclick=()=>{const list=$('#reelCategoryList'),toggle=$('#reelCategoryToggle');list.hidden=!list.hidden;$('#reelCategoryHint').hidden=list.hidden;toggle.setAttribute('aria-expanded',String(!list.hidden));toggle.textContent=list.hidden?'주제 선택 ▾':'주제 접기 ▲'};$('#storyResume').onclick = () => openStory();
 $('#storyReroll').onclick = () => openStory(randomStory.size, randomStory.selectedArc);
 $('#storyPrevious').onclick = () => {
   moveReel(-1);
@@ -2355,7 +2406,6 @@ function showCollection() {
   buildFocusRanges(data);
   $('#collectionTitle').textContent = current.title;
   $('#total').textContent = current.rows ? data.length.toLocaleString('ko-KR') : '—';
-  $('[data-tab="story"]').hidden = collection !== 'heart';
   for (const button of document.querySelectorAll('[data-collection]')) {
     button.setAttribute('aria-pressed', String(button.dataset.collection === collection));
   }
@@ -2392,9 +2442,13 @@ async function loadCollection(current) {
 function selectCollection(key) {
   const current = collections[key];
   if (key !== collection) {
+    collections[collection].story = randomStory;
     collection = key;
+    randomStory = current.story ?? null;
+    storyReading = false;
+    renderStoryChoices();
+    $('#storyError').textContent = '';
     $('#search').value = '';
-    if (tab === 'story') activateTab('list');
     index = 0;
     limit = 40;
   }
@@ -2415,5 +2469,6 @@ function selectCollection(key) {
   showCollection();
 }
 
+renderStoryChoices();
 selectCollection(collection);
 </script></body></html>

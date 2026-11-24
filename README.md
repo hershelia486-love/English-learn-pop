@@ -1,14 +1,15 @@
 # 마음에 남는 영어 한 문장
 
-팝송 학습 앱을 주제별 영어 문장 학습 앱으로 교체했습니다. 총 1,111개 문장에 영어, 한국어 뜻, 한글 근사 발음, 저자와 출처를 담습니다. 목록·주제 선택·한 장씩 위아래 넘기기·영어 듣기·기기 내 즐겨찾기를 지원합니다.
+팝송 학습 앱을 주제별 영어 문장 학습 앱으로 교체했습니다. ‘마음의 문장’ 1,111개와 ‘거장의 문장’을 골라 볼 수 있습니다. 각 모음은 영어, 한국어 뜻, 한글 근사 발음, 저자와 출처를 담습니다. 목록·주제 선택·한 장씩 위아래 넘기기·영어 듣기·기기 내 즐겨찾기를 지원합니다.
 
 ## 실행
 
-루트의 index.html과 quotes.json을 정적 서버로 제공합니다. 예: `python -m http.server 8000`. 브라우저에서 localhost:8000을 엽니다. 별도 빌드나 API 키가 필요하지 않습니다. Vercel에서는 루트를 정적 사이트로 배포합니다. 영어 듣기는 기기의 브라우저 음성을 사용합니다.
+저장소 루트를 정적 서버로 제공합니다. 예: `python -m http.server 8000`. 브라우저에서 localhost:8000을 엽니다. 별도 빌드나 API 키가 필요하지 않습니다. Vercel에서는 루트를 정적 사이트로 배포합니다. 영어 듣기는 기기의 브라우저 음성을 사용합니다.
 
 ## 수정과 검수
 
-- 기준 데이터: data/quotes.master.json.
+- 거장의 문장 추가·검수: [collections/masters](collections/masters/).
+- 마음의 문장 기준 데이터: data/quotes.master.json.
 - 문장 추가·수정 후 `python scripts/complete_quotes.py`를 실행하면 quotes.json에 복사하고 검사합니다.
 - `python scripts/audit_quotes.py`로 1,111개·번호·필수 항목·정확 중복·포함 인용·유사 문구를 검사합니다.
 - 구체적인 오류 수정, 출처, 확인 한계: AUDIT.md. 전후 기록: data/review-changes.json. 검사 결과: data/review-validation.json.

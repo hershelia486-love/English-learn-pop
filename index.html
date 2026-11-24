@@ -97,7 +97,7 @@ body.reel-open{overflow:hidden}.reel-overlay{position:fixed;inset:0;z-index:10;b
   </div></div></section><footer>한글 읽기는 참고용입니다. · 즐겨찾기는 이 기기에 저장됩니다.</footer></main><script>
 const collections = {
   heart: { title: '마음의 문장', file: './quotes.json' },
-  masters: { title: '거장의 문장', file: './collections/masters/quotes.json' }
+  masters: { title: '거장의 문장', manifest: './collections/masters/manifest.json' }
 };
 let collection = 'heart';
 let data=[],tab='list',limit=40,index=0;let favorites=[];try{favorites=JSON.parse(localStorage.getItem('seon_quote_favorites_v1')||'[]')}catch(e){};const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const pron={1:'러브, 앤드 유 셸 비 러브드.',13:'러브 이즈 미얼리 어 매드니스.',14:'이프 뮤직 비 더 푸드 오브 러브, 플레이 온.'};function filtered(){let q=$('#search').value.toLowerCase().trim(),c=$('#category').value;return data.filter(x=>(tab!=='fav'||favorites.includes(x.id))&&(!c||(x.tags||[x.keyword]).includes(c))&&(!q||[x.quote_en,x.quote_ko,x.author,x.source,...(x.tags||[x.keyword])].some(v=>String(v||'').toLowerCase().includes(q))))}
@@ -2368,6 +2368,27 @@ function showCollection() {
   render();
 }
 
+
+async function loadQuoteArray(path) {
+  const response = await fetch(path);
+  if (!response.ok) throw new Error('문장 파일 요청 실패');
+  const items = await response.json();
+  if (!Array.isArray(items)) throw new Error('문장 파일 형식 오류');
+  return items;
+}
+
+async function loadCollection(current) {
+  if (current.file) return loadQuoteArray(current.file);
+  const filenames = await loadQuoteArray(current.manifest);
+  if (!filenames.length || new Set(filenames).size !== filenames.length ||
+      filenames.some(name => typeof name !== 'string' || !/^(quotes|batch-\d{3})\.json$/.test(name))) {
+    throw new Error('모음 목록 형식 오류');
+  }
+  const manifestUrl = new URL(current.manifest, location.href);
+  const batches = await Promise.all(filenames.map(name => loadQuoteArray(new URL(name, manifestUrl))));
+  return batches.flat();
+}
+
 function selectCollection(key) {
   const current = collections[key];
   if (key !== collection) {
@@ -2379,13 +2400,8 @@ function selectCollection(key) {
   }
   if (!current.rows && !current.loading) {
     current.error = '';
-    current.loading = fetch(current.file)
-      .then(response => {
-        if (!response.ok) throw new Error('문장 파일 요청 실패');
-        return response.json();
-      })
+    current.loading = loadCollection(current)
       .then(rows => {
-        if (!Array.isArray(rows)) throw new Error('문장 파일 형식 오류');
         current.rows = rows;
       })
       .catch(() => {

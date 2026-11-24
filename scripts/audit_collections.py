@@ -27,7 +27,19 @@ def overlap(left, right):
 
 def main():
     heart = json.loads((ROOT / "quotes.json").read_text(encoding="utf-8"))
-    masters = json.loads((ROOT / "collections/masters/quotes.json").read_text(encoding="utf-8"))
+    directory = ROOT / "collections/masters"
+    filenames = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
+    if not isinstance(filenames, list) or not filenames or any(
+        not isinstance(name, str) or not re.fullmatch(r"(quotes|batch-\d{3})\.json", name)
+        for name in filenames
+    ) or len(set(filenames)) != len(filenames):
+        raise ValueError("거장의 문장 manifest.json 파일 목록을 확인하세요.")
+    masters = []
+    for name in filenames:
+        rows = json.loads((directory / name).read_text(encoding="utf-8"))
+        if not isinstance(rows, list):
+            raise ValueError(f"{name}: 문장 배열이 필요합니다.")
+        masters.extend(rows)
     seen = [(row["id"], tokens(row["quote_en"])) for row in heart]
     ids = set()
     errors = []
@@ -35,8 +47,8 @@ def main():
     fields = ("quote_en", "quote_ko", "pronunciation_ko", "author", "source", "source_url", "keyword")
     for row in masters:
         quote_id = row.get("id")
-        if not isinstance(quote_id, str) or not re.fullmatch(r"Q-\d{4}", quote_id) or quote_id in ids:
-            errors.append(f"{quote_id}: 서로 다른 Q-0000 형식 번호를 쓰세요.")
+        if not isinstance(quote_id, str) or not re.fullmatch(r"[AHQ]-\d{4}", quote_id) or quote_id in ids:
+            errors.append(f"{quote_id}: 서로 다른 A-, H-, Q- 형식 번호를 쓰세요.")
             continue
         ids.add(quote_id)
         if any(not isinstance(row.get(field), str) or not row[field].strip() for field in fields):

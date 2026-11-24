@@ -44,7 +44,7 @@ def main():
     ids = set()
     errors = []
     findings = []
-    fields = ("quote_en", "quote_ko", "pronunciation_ko", "author", "source", "source_url", "keyword")
+    fields = ("quote_en", "quote_ko", "pronunciation_ko", "author", "source", "source_url", "keyword", "reflection_question", "action_question")
     for row in masters:
         quote_id = row.get("id")
         if not isinstance(quote_id, str) or not re.fullmatch(r"[AHQ]-\d{4}", quote_id) or quote_id in ids:
@@ -52,7 +52,7 @@ def main():
             continue
         ids.add(quote_id)
         if any(not isinstance(row.get(field), str) or not row[field].strip() for field in fields):
-            errors.append(f"{quote_id}: 원문·번역·발음·저자·출처·주제를 확인하세요.")
+            errors.append(f"{quote_id}: 원문·번역·발음·저자·출처·주제·질문을 확인하세요.")
             continue
         if not row["source_url"].startswith("https://") or row.get("source_text_checked") is not True:
             errors.append(f"{quote_id}: 원문을 대조한 뒤 출처 링크를 넣으세요.")

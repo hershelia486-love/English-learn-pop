@@ -66,6 +66,14 @@ body.reel-open{overflow:hidden}.reel-overlay{position:fixed;inset:0;z-index:10;b
 .collection-button{background:var(--surface);color:var(--green);border:1px solid #aab8ac;border-radius:8px;padding:9px 16px;min-height:44px;font-size:15px;font-weight:700}
 .collection-button[aria-pressed="true"]{background:var(--green);color:white;border-color:var(--green)}
 .collection-picker + .hero{padding-top:23px}
+
+.quote-questions { margin: 10px 0; color: var(--ink); font-size: 14px; line-height: 1.6; }
+.quote-questions summary { cursor: pointer; min-height: 44px; line-height: 24px; padding-block: 10px; font-weight: 650; color: var(--sage-dark, #345143); }
+.quote-questions dl { margin: 0 0 12px; padding: 10px 14px; border-left: 2px solid #8aab97; background: #f1f6f2; }
+.quote-questions dt { font-weight: 700; }
+.quote-questions dd { margin: 0 0 8px; overflow-wrap: anywhere; }
+.quote-questions dd:last-child { margin-bottom: 0; }
+.translation-draft { display: block; color: #586557; font-size: 11px; margin-top: 2px; }
 </style></head><body><header><nav><div class="brand"><small>SEON · 영어 문장 모음</small>마음에 남는 영어 한 문장</div><div class="tabs"><button class="tab active" data-tab="list" aria-pressed="true">문장 목록</button><button class="tab" data-tab="reel" aria-pressed="false">한 장씩</button><button class="tab" data-tab="fav" aria-pressed="false">즐겨찾기</button><button class="tab" data-tab="story" aria-pressed="false">랜덤 이야기</button></div></nav></header><main class="wrap">
 <div class="collection-picker" role="group" aria-label="문장 모음 선택">
   <button type="button" class="collection-button" data-collection="heart" aria-pressed="true">마음의 문장</button>
@@ -2136,7 +2144,15 @@ function toggleMeaning(button) {
   panel.append(term, document.createTextNode(' · ' + button.dataset.meaning));
 }
 
-function card(x){return `<article class="card"><div class="tag">${esc((x.tags||[x.keyword]).join(' · '))} · #${esc(x.id)}</div><div class="english">${renderEnglish(x)}</div><details class="pron"><summary>한글 읽기 · 참고 표기</summary><p class="pron-body">${x.pronunciation_ko?esc(x.pronunciation_ko):pron[x.id]?esc(pron[x.id]):'한글 발음 준비 중'}</p></details><div class="ko">${esc(x.quote_ko)}</div>${tab==='reel'&&x.learning?`<div class="study-note"><strong>문장 속 단어</strong><div class="study-words">${x.learning.words.map(w=>`<span><b>${esc(w.en)}</b> ${esc(w.ko)}</span>`).join('')}</div><p>${esc(x.learning.association)}</p></div>`:''}<details class="source"><summary>작성자와 출처 보기</summary><div class="source-body">${esc(x.author)}<br>${esc(x.source)}${x.source_url&&/^https:\/\//.test(x.source_url)?`<br><a href="${esc(x.source_url)}" target="_blank" rel="noopener noreferrer">영어 자료 보기 ↗</a>`:''}<br>${esc(x.source_text_checked?"영어 자료 본문 대조 · 최초 유래·번역 추가 검토 가능":"원저작·최초 출전 추가 대조 필요")}${x.usage_note?`<p>${esc(x.usage_note)}</p>`:""}${x.reflection_question?`<p>${esc(x.reflection_question)}</p>`:""}</div></details><div class="buttons"><button class="btn" data-speak="${x.id}">▶ 영어 듣기</button><button class="btn star" data-fav="${x.id}">${favorites.includes(x.id)?'★ 저장됨':'☆ 마음에 담기'}</button></div></article>`}function renderCategories(){const oldScroll=$('#reelCategoryList').scrollLeft,c=$('#category').value;$('#reelCategoryLabel').textContent='주제 · '+(c||'전체');$('#reelCategoryList').innerHTML=['',...Array.from($('#category').options).slice(1).map(o=>o.value)].map(v=>`<button class="reel-chip ${c===v?'selected':''}" data-reel-category="${esc(v)}" aria-pressed="${c===v}">${esc(v||'전체')}</button>`).join('');$('#reelCategoryList').scrollLeft=oldScroll}
+function renderQuoteQuestions(quote) {
+  if (!quote.reflection_question || !quote.action_question) return '';
+  return `<details class="quote-questions"><summary>사유·행동 질문</summary><dl>
+    <dt>사유 질문</dt><dd>${esc(quote.reflection_question)}</dd>
+    <dt>행동 질문</dt><dd>${esc(quote.action_question)}</dd>
+  </dl></details>`;
+}
+
+function card(x){return `<article class="card"><div class="tag">${esc((x.tags||[x.keyword]).join(' · '))} · #${esc(x.id)}</div><div class="english">${renderEnglish(x)}</div><details class="pron"><summary>한글 읽기 · 참고 표기</summary><p class="pron-body">${x.pronunciation_ko?esc(x.pronunciation_ko):pron[x.id]?esc(pron[x.id]):'한글 발음 준비 중'}</p></details><div class="ko">${esc(x.quote_ko)}${x.translation_draft?'<small class="translation-draft">번역 초안</small>':''}</div>${renderQuoteQuestions(x)}${tab==='reel'&&x.learning?`<div class="study-note"><strong>문장 속 단어</strong><div class="study-words">${x.learning.words.map(w=>`<span><b>${esc(w.en)}</b> ${esc(w.ko)}</span>`).join('')}</div><p>${esc(x.learning.association)}</p></div>`:''}<details class="source"><summary>작성자와 출처 보기</summary><div class="source-body">${esc(x.author)}<br>${esc(x.source)}${x.source_url&&/^https:\/\//.test(x.source_url)?`<br><a href="${esc(x.source_url)}" target="_blank" rel="noopener noreferrer">영어 자료 보기 ↗</a>`:''}<br>${esc(x.source_text_checked?"영어 자료 본문 대조 · 최초 유래·번역 추가 검토 가능":"원저작·최초 출전 추가 대조 필요")}${x.usage_note?`<p>${esc(x.usage_note)}</p>`:""}</div></details><div class="buttons"><button class="btn" data-speak="${x.id}">▶ 영어 듣기</button><button class="btn star" data-fav="${x.id}">${favorites.includes(x.id)?'★ 저장됨':'☆ 마음에 담기'}</button></div></article>`}function renderCategories(){const oldScroll=$('#reelCategoryList').scrollLeft,c=$('#category').value;$('#reelCategoryLabel').textContent='주제 · '+(c||'전체');$('#reelCategoryList').innerHTML=['',...Array.from($('#category').options).slice(1).map(o=>o.value)].map(v=>`<button class="reel-chip ${c===v?'selected':''}" data-reel-category="${esc(v)}" aria-pressed="${c===v}">${esc(v||'전체')}</button>`).join('');$('#reelCategoryList').scrollLeft=oldScroll}
 const heartStoryArcs = [
   {
     id: 'heavy',

@@ -86,7 +86,9 @@ input, select { color: var(--ink); }
 .bookmark-icon { width: 13px; height: 16px; stroke: currentColor; stroke-width: 3.8; fill: none; stroke-linejoin: round; }
 .star[aria-pressed="true"] .bookmark-icon { fill: currentColor; }
 .more { display: block; min-height: 48px; margin: 26px auto 10px; padding: 10px 24px; border-radius: 5px; background: var(--green); color: var(--surface); font-weight: 650; }
-.study-note { border-left: 2px solid #8d9e82; margin: 15px 0; padding-left: 12px; font-size: 14px; line-height: 1.6; }
+.study-note { border-left: 2px solid #8d9e82; margin: 12px 0; padding-left: 12px; font-size: 14px; line-height: 1.6; }
+.study-note strong { display: block; margin-bottom: 3px; color: var(--green); font-size: 12px; }
+.study-note p { margin: 0; }
 footer { padding: 26px 0; font-size: 13px; color: var(--muted); line-height: 1.6; }
 .save-status { position: fixed; z-index: 12; bottom: max(18px, env(safe-area-inset-bottom)); right: 18px; max-width: calc(100% - 36px); pointer-events: none; }
 .save-status:not(:empty) { background: #203e30; color: var(--surface); border-radius: 5px; padding: 10px 14px; font-size: 14px; }
@@ -188,6 +190,19 @@ body.reel-open{overflow:hidden}.reel-overlay{position:fixed;inset:0;z-index:10;b
 .translation-draft { display: block; color: #586557; font-size: 11px; margin-top: 2px; }
 
 .reel-overlay { background: var(--paper); }
+.reel-controls { display: flex; justify-content: center; gap: 8px; margin-bottom: 4px; }
+.reel-controls .btn:disabled { opacity: .5; cursor: default; }
+.reel-hint { display: block; }
+.reel-hint-touch { display: none; }
+#reel[data-view="story"] #reelEdge { display: block; }
+#reel[data-view="reel"] #reelEdge { display: none; }
+@media (pointer: coarse) {
+  .reel-hint-keyboard { display: none; }
+  .reel-hint-touch { display: block; }
+}
+@media (max-height: 550px) {
+  .reel-hint { display: none; }
+}
 .reel-stage .card { border-radius: 5px; box-shadow: none; }
 .reel-category-toggle, .reel-close { border-radius: 5px; }
 .quote-questions { margin: 0; }
@@ -250,7 +265,14 @@ body.reel-open{overflow:hidden}.reel-overlay{position:fixed;inset:0;z-index:10;b
   <div class="story-title-row"><strong id="storyArcTitle"></strong><span id="storyTopic"></span></div>
   <p class="story-stage" id="storyStageTitle"></p>
   <p id="storyStageNote"></p>
-</section><div class="reel-stage" id="reelCard"></div><div class="reel-foot">위로 밀면 다음 문장 · 아래로 밀면 이전 문장<br><span id="reelEdge"></span>
+</section><div class="reel-stage" id="reelCard"></div><div class="reel-foot">
+  <div class="reel-controls" id="reelControls" role="group" aria-label="문장 넘기기">
+    <button type="button" class="btn" id="reelPrevious">← 이전 문장</button>
+    <button type="button" class="btn" id="reelNext">다음 문장 →</button>
+  </div>
+  <span class="reel-hint reel-hint-keyboard">← → 키로도 넘길 수 있어요.</span>
+  <span class="reel-hint reel-hint-touch">위로 밀면 다음 · 아래로 밀면 이전</span>
+  <span id="reelEdge"></span>
   <div id="storyControls" class="story-controls" hidden>
     <button type="button" class="btn" id="storyPrevious">이전 장</button>
     <button type="button" class="btn" id="storyNext">다음 장</button>
@@ -275,7 +297,7 @@ function shuffledQuotes(quotes) {
 function filtered() {
   const query = $('#search').value.toLowerCase().trim();
   const category = $('#category').value;
-  const rows = tab === 'list' ? collections[collection].listOrder ?? [] : data;
+  const rows = tab === 'fav' ? data : collections[collection].readingOrder ?? data;
   return rows.filter(quote => {
     const tags = quote.tags || [quote.keyword];
     return (tab !== 'fav' || favorites.includes(quote.id)) &&
@@ -2439,7 +2461,7 @@ function favoriteButton(quote) {
   </button>`;
 }
 
-function card(x){return `<article class="card"><div class="tag">${esc((x.tags||[x.keyword]).join(' · '))}<span class="quote-id">#${esc(x.id)}</span></div><div class="english">${renderEnglish(x)}</div><div class="translation"><details class="pron"><summary>한글 읽기 · 참고 표기</summary><p class="pron-body">${x.pronunciation_ko?esc(x.pronunciation_ko):pron[x.id]?esc(pron[x.id]):'한글 발음 준비 중'}</p></details><div class="ko">${esc(x.quote_ko)}${x.translation_draft?'<small class="translation-draft">번역 초안</small>':''}</div>${renderQuoteGuide(x)}${tab === 'reel' && x.learning?.association ? `<p class="study-note">${esc(x.learning.association)}</p>` : ''}<details class="source"><summary>작성자와 출처 보기</summary><div class="source-body">${esc(x.author)}<br>${esc(x.source)}${x.source_url&&/^https:\/\//.test(x.source_url)?`<br><a href="${esc(x.source_url)}" target="_blank" rel="noopener noreferrer">영어 자료 보기 ↗</a>`:''}<br>${esc(x.source_text_checked?"영어 자료 본문 대조 · 최초 유래·번역 추가 검토 가능":"원저작·최초 출전 추가 대조 필요")}${x.usage_note && !hasSpecificQuoteNote(x.usage_note.trim())?`<p>${esc(x.usage_note)}</p>`:''}</div></details></div><div class="buttons"><button class="btn" data-speak="${x.id}">▶ 영어 듣기</button>${favoriteButton(x)}</div></article>`}function renderCategories(){const oldScroll=$('#reelCategoryList').scrollLeft,c=$('#category').value;$('#reelCategoryLabel').textContent='주제 · '+(c||'전체');$('#reelCategoryList').innerHTML=['',...Array.from($('#category').options).slice(1).map(o=>o.value)].map(v=>`<button class="reel-chip ${c===v?'selected':''}" data-reel-category="${esc(v)}" aria-pressed="${c===v}">${esc(v||'전체')}</button>`).join('');$('#reelCategoryList').scrollLeft=oldScroll}
+function card(x){return `<article class="card"><div class="tag">${esc((x.tags||[x.keyword]).join(' · '))}<span class="quote-id">#${esc(x.id)}</span></div><div class="english">${renderEnglish(x)}</div><div class="translation"><details class="pron"><summary>한글 읽기 · 참고 표기</summary><p class="pron-body">${x.pronunciation_ko?esc(x.pronunciation_ko):pron[x.id]?esc(pron[x.id]):'한글 발음 준비 중'}</p></details><div class="ko">${esc(x.quote_ko)}${x.translation_draft?'<small class="translation-draft">번역 초안</small>':''}</div>${renderQuoteGuide(x)}${tab === 'reel' && x.learning?.association ? `<div class="study-note"><strong>장면 떠올리기</strong><p>${esc(x.learning.association)}</p></div>` : ''}<details class="source"><summary>작성자와 출처 보기</summary><div class="source-body">${esc(x.author)}<br>${esc(x.source)}${x.source_url&&/^https:\/\//.test(x.source_url)?`<br><a href="${esc(x.source_url)}" target="_blank" rel="noopener noreferrer">영어 자료 보기 ↗</a>`:''}<br>${esc(x.source_text_checked?"영어 자료 본문 대조 · 최초 유래·번역 추가 검토 가능":"원저작·최초 출전 추가 대조 필요")}${x.usage_note && !hasSpecificQuoteNote(x.usage_note.trim())?`<p>${esc(x.usage_note)}</p>`:''}</div></details></div><div class="buttons"><button class="btn" data-speak="${x.id}">▶ 영어 듣기</button>${favoriteButton(x)}</div></article>`}function renderCategories(){const oldScroll=$('#reelCategoryList').scrollLeft,c=$('#category').value;$('#reelCategoryLabel').textContent='주제 · '+(c||'전체');$('#reelCategoryList').innerHTML=['',...Array.from($('#category').options).slice(1).map(o=>o.value)].map(v=>`<button class="reel-chip ${c===v?'selected':''}" data-reel-category="${esc(v)}" aria-pressed="${c===v}">${esc(v||'전체')}</button>`).join('');$('#reelCategoryList').scrollLeft=oldScroll}
 const heartStoryArcs = [
   {
     id: 'heavy',
@@ -2657,6 +2679,7 @@ function render() {
   $('.reel-categories').hidden = storyReading;
   $('#storyReader').hidden = !storyReading;
   $('#storyControls').hidden = !storyReading;
+  $('#reelControls').hidden = storyReading;
   document.body.classList.toggle('reel-open', reading);
   $('header').inert = reading;
   for (const child of $('.wrap').children) {
@@ -2670,10 +2693,10 @@ function render() {
   }
   index = Math.max(0, Math.min(index, items.length - 1));
   $('#reelCard').innerHTML = items.length ? card(items[index]) : `<p>${esc(status || '해당하는 문장이 없습니다.')}</p>`;
+  $('#reelPrevious').disabled = index === 0;
+  $('#reelNext').disabled = index >= items.length - 1;
   $('#reelCount').textContent = `${items.length ? index + 1 : 0} / ${items.length}`;
-  $('#reelEdge').textContent = !items.length ? '문장이 없습니다' :
-    index === items.length - 1 ? (storyReading ? '이야기를 모두 읽었어요.' : '마지막 문장입니다') :
-    index === 0 && !storyReading ? '첫 문장입니다' : '';
+  $('#reelEdge').textContent = storyReading && index === items.length - 1 ? '이야기를 모두 읽었어요.' : '';
   if (storyReading) {
     randomStory.position = index;
     renderStoryReading(randomStory.cards[index]);
@@ -2727,6 +2750,14 @@ $('#clearSearch').onclick = () => clearFilters(false);
 $('#resetFilters').onclick = () => clearFilters(true);
 $('#more').onclick=()=>{limit+=40;render()};$('#reelCategoryToggle').onclick=()=>{const list=$('#reelCategoryList'),toggle=$('#reelCategoryToggle');list.hidden=!list.hidden;$('#reelCategoryHint').hidden=list.hidden;toggle.setAttribute('aria-expanded',String(!list.hidden));toggle.textContent=list.hidden?'주제 선택 ▾':'주제 접기 ▲'};$('#storyResume').onclick = () => openStory();
 $('#storyReroll').onclick = () => openStory(randomStory.size, randomStory.selectedArc);
+$('#reelPrevious').onclick = () => {
+  moveReel(-1);
+  if ($('#reelPrevious').disabled) $('#reelNext').focus();
+};
+$('#reelNext').onclick = () => {
+  moveReel(1);
+  if ($('#reelNext').disabled) $('#reelPrevious').focus();
+};
 $('#storyPrevious').onclick = () => {
   moveReel(-1);
   if ($('#storyPrevious').disabled) $('#storyNext').focus();
@@ -2753,7 +2784,7 @@ function moveReel(step) {
   index = next;
   render();
 }
-let touchStart=null;const surface=$('#reel');surface.addEventListener('touchstart',e=>{if(e.touches.length!==1)return;const card=e.target.closest('.card');touchStart={x:e.touches[0].clientX,y:e.touches[0].clientY,card,scrollTop:card?card.scrollTop:0};},{passive:true});surface.addEventListener('touchend',e=>{if(!touchStart)return;const t=e.changedTouches[0],dx=t.clientX-touchStart.x,dy=t.clientY-touchStart.y,card=touchStart.card,start=touchStart.scrollTop;const wasScrolling=card&&card.scrollHeight>card.clientHeight+2&&((dy<0&&start<card.scrollHeight-card.clientHeight-2)||(dy>0&&start>2));touchStart=null;if(!wasScrolling&&!e.target.closest('.reel-category-list')&&Math.abs(dy)>55&&Math.abs(dy)>Math.abs(dx)*1.3){moveReel(dy<0?1:-1)}},{passive:true});document.addEventListener('keydown',e=>{if((tab!=='reel'&&!storyReading)||e.target.closest('input,select,.reel-category-list'))return;if(e.key==='ArrowDown'||e.key==='PageDown'){e.preventDefault();moveReel(1)}else if(e.key==='ArrowUp'||e.key==='PageUp'){e.preventDefault();moveReel(-1)}else if(e.key==='Escape')$('#reelClose').click()});
+let touchStart=null;const surface=$('#reel');surface.addEventListener('touchstart',e=>{if(e.touches.length!==1)return;const card=e.target.closest('.card');touchStart={x:e.touches[0].clientX,y:e.touches[0].clientY,card,scrollTop:card?card.scrollTop:0};},{passive:true});surface.addEventListener('touchend',e=>{if(!touchStart)return;const t=e.changedTouches[0],dx=t.clientX-touchStart.x,dy=t.clientY-touchStart.y,card=touchStart.card,start=touchStart.scrollTop;const wasScrolling=card&&card.scrollHeight>card.clientHeight+2&&((dy<0&&start<card.scrollHeight-card.clientHeight-2)||(dy>0&&start>2));touchStart=null;if(!wasScrolling&&!e.target.closest('.reel-category-list')&&Math.abs(dy)>55&&Math.abs(dy)>Math.abs(dx)*1.3){moveReel(dy<0?1:-1)}},{passive:true});document.addEventListener('keydown',e=>{if((tab!=='reel'&&!storyReading)||e.target.closest('input,select,.reel-category-list'))return;if(e.key==='ArrowDown'||e.key==='PageDown'||e.key==='ArrowRight'){e.preventDefault();moveReel(1)}else if(e.key==='ArrowUp'||e.key==='PageUp'||e.key==='ArrowLeft'){e.preventDefault();moveReel(-1)}else if(e.key==='Escape')$('#reelClose').click()});
 function showCollection() {
   const current = collections[collection];
   data = current.rows ?? [];
@@ -2811,7 +2842,7 @@ function selectCollection(key) {
     current.loading = loadCollection(current)
       .then(rows => {
         current.rows = rows;
-        current.listOrder = shuffledQuotes(rows);
+        current.readingOrder = shuffledQuotes(rows);
       })
       .catch(() => {
         current.error = '문장 파일을 불러오지 못했습니다. 모음 이름을 눌러 다시 시도해 주세요.';
